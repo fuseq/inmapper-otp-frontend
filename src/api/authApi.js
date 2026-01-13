@@ -34,23 +34,29 @@ class AuthAPI {
   }
 
   async register(email, name, callbackUrl = null) {
+    const body = { email, name };
+    if (callbackUrl) body.callbackUrl = callbackUrl;
     return this.request('/auth/register', {
       method: 'POST',
-      body: JSON.stringify({ email, name, callbackUrl }),
+      body: JSON.stringify(body),
     });
   }
 
   async login(email, callbackUrl = null) {
+    const body = { email };
+    if (callbackUrl) body.callbackUrl = callbackUrl;
     return this.request('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ email, callbackUrl }),
+      body: JSON.stringify(body),
     });
   }
 
   async verifyOTP(email, code, callbackUrl = null) {
+    const body = { email, code };
+    if (callbackUrl) body.callbackUrl = callbackUrl;
     return this.request('/auth/verify', {
       method: 'POST',
-      body: JSON.stringify({ email, code, callbackUrl }),
+      body: JSON.stringify(body),
     });
   }
 
