@@ -71,8 +71,7 @@ function Dashboard() {
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
           <div className="logo" style={{ marginBottom: 0 }}>
-            <div className="logo-icon" style={{ width: 40, height: 40, fontSize: 20 }}>🔐</div>
-            <span className="logo-text" style={{ fontSize: 22 }}>OTP Auth</span>
+            <img src="/inmapper.png" alt="Inmapper" style={{ height: 36 }} />
           </div>
           <button 
             onClick={handleLogout}
@@ -225,4 +224,5 @@ function Dashboard() {
 }
 
 export default Dashboard
+
 

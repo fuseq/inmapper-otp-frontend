@@ -54,6 +54,10 @@ function Success() {
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
       >
+        <div className="logo">
+          <img src="/inmapper.png" alt="Inmapper" />
+        </div>
+
         <motion.div 
           className="success-icon"
           initial={{ scale: 0 }}
@@ -180,4 +184,5 @@ function Success() {
 }
 
 export default Success
+
 

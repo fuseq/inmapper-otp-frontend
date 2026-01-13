@@ -54,8 +54,7 @@ function Register({ authState, setAuthState }) {
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
       >
         <div className="logo">
-          <div className="logo-icon">🔐</div>
-          <span className="logo-text">OTP Auth</span>
+          <img src="/inmapper.png" alt="Inmapper" />
         </div>
 
         <div className="heading">
@@ -140,4 +139,5 @@ function Register({ authState, setAuthState }) {
 }
 
 export default Register
+
 
