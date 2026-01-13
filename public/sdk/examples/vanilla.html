@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Korumalı Sayfa - Vanilla JS Örneği</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: system-ui, -apple-system, sans-serif; 
+      background: #f8fafc; 
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .container {
+      background: white;
+      padding: 40px;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+    }
+    .loading { color: #64748b; }
+    .user-info h1 { color: #1e293b; margin-bottom: 8px; }
+    .user-info p { color: #64748b; margin-bottom: 24px; }
+    .user-card {
+      background: #f1f5f9;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 24px;
+    }
+    .user-card .name { font-size: 20px; font-weight: 600; color: #1e293b; }
+    .user-card .email { color: #64748b; font-size: 14px; }
+    .btn {
+      background: #ef4444;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .btn:hover { background: #dc2626; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="loading" class="loading">
+      <p>Yükleniyor...</p>
+    </div>
+    
+    <div id="content" class="user-info" style="display: none;">
+      <h1>🎉 Hoş Geldiniz!</h1>
+      <p>Bu sayfa korumalıdır</p>
+      
+      <div class="user-card">
+        <div class="name" id="userName"></div>
+        <div class="email" id="userEmail"></div>
+      </div>
+      
+      <button class="btn" onclick="handleLogout()">Çıkış Yap</button>
+    </div>
+  </div>
+
+  <!-- Inmapper Auth SDK -->
+  <script src="https://inmapper-otp.netlify.app/sdk/inmapper-auth.js"></script>
+  
+  <script>
+    const auth = new InmapperAuth();
+    
+    // Sayfa yüklendiğinde
+    async function init() {
+      // protect() - kullanıcı yoksa otomatik login'e yönlendirir
+      const user = await auth.protect();
+      
+      if (user) {
+        // Kullanıcı giriş yapmış
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('content').style.display = 'block';
+        document.getElementById('userName').textContent = user.name;
+        document.getElementById('userEmail').textContent = user.email;
+      }
+    }
+    
+    function handleLogout() {
+      auth.logout(true); // true = logout sonrası login sayfasına yönlendir
+    }
+    
+    init();
+  </script>
+</body>
+</html>
+
+
