@@ -11,9 +11,11 @@ const DEFAULT_CONFIG = {
   tokenKey: 'inmapper_auth_token',
   userKey: 'inmapper_auth_user',
   autoRedirect: true,
+  resourceId: null,
   onAuthRequired: null,
   onAuthSuccess: null,
   onAuthError: null,
+  onAccessDenied: null,
 };
 
 export class InmapperAuth {
@@ -32,14 +34,21 @@ export class InmapperAuth {
     return this;
   }
 
-  async protect() {
+  async protect(options = {}) {
     await this.init();
-    const user = await this.getUser();
-    if (!user) {
+    const result = await this.getUser(false, options.resourceId || this.config.resourceId);
+    
+    if (!result) {
       this._redirectToLogin();
       return null;
     }
-    return user;
+
+    if (result.hasResourceAccess === false) {
+      this._handleAccessDenied(result.user);
+      return null;
+    }
+    
+    return result.user || result;
   }
 
   async isAuthenticated() {
@@ -48,17 +57,20 @@ export class InmapperAuth {
     return !!user;
   }
 
-  async getUser(forceRefresh = false) {
+  async getUser(forceRefresh = false, resourceId = null) {
     await this.init();
     
     if (!this._token) return null;
-    if (this._user && !forceRefresh) return this._user;
+    if (this._user && !forceRefresh && !resourceId) return this._user;
 
     try {
+      const body = { token: this._token };
+      if (resourceId) body.resource = resourceId;
+
       const response = await fetch(`${this.config.apiUrl}/auth/validate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: this._token }),
+        body: JSON.stringify(body),
       });
 
       const data = await response.json();
@@ -67,6 +79,10 @@ export class InmapperAuth {
         this._user = data.user;
         this._saveToStorage();
         if (this.config.onAuthSuccess) this.config.onAuthSuccess(this._user);
+        
+        if (resourceId) {
+          return { user: this._user, hasResourceAccess: data.hasResourceAccess };
+        }
         return this._user;
       } else {
         this._clearAuth();
@@ -120,6 +136,20 @@ export class InmapperAuth {
     });
   }
 
+  redirectTo(url) {
+    if (this._token) {
+      const separator = url.includes('?') ? '&' : '?';
+      window.location.href = `${url}${separator}token=${encodeURIComponent(this._token)}`;
+    } else {
+      window.location.href = url;
+    }
+  }
+
+  async hasPermission(resourceId) {
+    const result = await this.getUser(true, resourceId);
+    return result?.hasResourceAccess === true;
+  }
+
   _handleCallbackToken() {
     const urlParams = new URLSearchParams(window.location.search);
     const tokenFromUrl = urlParams.get('token');
@@ -169,6 +199,60 @@ export class InmapperAuth {
     }
     this.login();
   }
+
+  _handleAccessDenied(user) {
+    if (this.config.onAccessDenied) {
+      this.config.onAccessDenied(user);
+    } else {
+      document.body.innerHTML = `
+        <div style="
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          min-height: 100vh;
+          font-family: system-ui, -apple-system, sans-serif;
+          background: #f8fafc;
+          color: #334155;
+          padding: 24px;
+          text-align: center;
+        ">
+          <div style="
+            background: white;
+            padding: 48px;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.1);
+            max-width: 400px;
+          ">
+            <div style="font-size: 64px; margin-bottom: 16px;">🚫</div>
+            <h1 style="font-size: 24px; font-weight: 700; margin-bottom: 8px; color: #ef4444;">
+              Erişim Engellendi
+            </h1>
+            <p style="color: #64748b; margin-bottom: 24px;">
+              Bu sayfaya erişim yetkiniz bulunmamaktadır.
+              Lütfen yöneticinizle iletişime geçin.
+            </p>
+            <p style="font-size: 14px; color: #94a3b8;">
+              Giriş yapan: ${user?.name || user?.email || 'Bilinmiyor'}
+            </p>
+            <button onclick="window.history.back()" style="
+              margin-top: 24px;
+              padding: 12px 24px;
+              background: #3b82f6;
+              color: white;
+              border: none;
+              border-radius: 8px;
+              cursor: pointer;
+              font-size: 14px;
+              font-weight: 500;
+            ">
+              Geri Dön
+            </button>
+          </div>
+        </div>
+      `;
+    }
+  }
 }
 
 // Singleton instance for simple usage
@@ -182,5 +266,3 @@ export function getAuth(config) {
 }
 
 export default InmapperAuth;
-
-

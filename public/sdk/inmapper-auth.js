@@ -24,9 +24,11 @@
     tokenKey: 'inmapper_auth_token',
     userKey: 'inmapper_auth_user',
     autoRedirect: true,
+    resourceId: null, // Resource identifier for permission checking
     onAuthRequired: null,
     onAuthSuccess: null,
     onAuthError: null,
+    onAccessDenied: null, // Called when user doesn't have permission
   };
 
   class InmapperAuth {
@@ -56,19 +58,27 @@
 
     /**
      * Protect the current page - redirects to login if not authenticated
+     * @param {Object} options - Protection options
+     * @param {string} options.resourceId - Override config resourceId for this check
      * @returns {Promise<Object|null>} User object or null
      */
-    async protect() {
+    async protect(options = {}) {
       await this.init();
       
-      const user = await this.getUser();
+      const result = await this.getUser(false, options.resourceId || this.config.resourceId);
       
-      if (!user) {
+      if (!result) {
         this._redirectToLogin();
         return null;
       }
+
+      // Check permission if resourceId is set
+      if (result.hasResourceAccess === false) {
+        this._handleAccessDenied(result.user);
+        return null;
+      }
       
-      return user;
+      return result.user || result;
     }
 
     /**
@@ -84,28 +94,34 @@
     /**
      * Get current user (validates token with server)
      * @param {boolean} forceRefresh - Force server validation
-     * @returns {Promise<Object|null>} User object or null
+     * @param {string} resourceId - Resource to check permission for
+     * @returns {Promise<Object|null>} User object with permission info or null
      */
-    async getUser(forceRefresh = false) {
+    async getUser(forceRefresh = false, resourceId = null) {
       await this.init();
       
       if (!this._token) {
         return null;
       }
 
-      // Return cached user if not forcing refresh
-      if (this._user && !forceRefresh) {
+      // Return cached user if not forcing refresh and no resource check needed
+      if (this._user && !forceRefresh && !resourceId) {
         return this._user;
       }
 
       // Validate with server
       try {
+        const body = { token: this._token };
+        if (resourceId) {
+          body.resource = resourceId;
+        }
+
         const response = await fetch(`${this.config.apiUrl}/auth/validate`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ token: this._token }),
+          body: JSON.stringify(body),
         });
 
         const data = await response.json();
@@ -116,6 +132,14 @@
           
           if (this.config.onAuthSuccess) {
             this.config.onAuthSuccess(this._user);
+          }
+          
+          // Return full data if resourceId was provided (includes hasResourceAccess)
+          if (resourceId) {
+            return {
+              user: this._user,
+              hasResourceAccess: data.hasResourceAccess
+            };
           }
           
           return this._user;
@@ -261,6 +285,84 @@
         if (!this.config.autoRedirect) return;
       }
       this.login();
+    }
+
+    _handleAccessDenied(user) {
+      if (this.config.onAccessDenied) {
+        this.config.onAccessDenied(user);
+      } else {
+        // Default access denied behavior - show message
+        document.body.innerHTML = `
+          <div style="
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            font-family: system-ui, -apple-system, sans-serif;
+            background: #f8fafc;
+            color: #334155;
+            padding: 24px;
+            text-align: center;
+          ">
+            <div style="
+              background: white;
+              padding: 48px;
+              border-radius: 16px;
+              box-shadow: 0 4px 24px rgba(0,0,0,0.1);
+              max-width: 400px;
+            ">
+              <div style="font-size: 64px; margin-bottom: 16px;">🚫</div>
+              <h1 style="font-size: 24px; font-weight: 700; margin-bottom: 8px; color: #ef4444;">
+                Erişim Engellendi
+              </h1>
+              <p style="color: #64748b; margin-bottom: 24px;">
+                Bu sayfaya erişim yetkiniz bulunmamaktadır.
+                Lütfen yöneticinizle iletişime geçin.
+              </p>
+              <p style="font-size: 14px; color: #94a3b8;">
+                Giriş yapan: ${user?.name || user?.email || 'Bilinmiyor'}
+              </p>
+              <button onclick="window.history.back()" style="
+                margin-top: 24px;
+                padding: 12px 24px;
+                background: #3b82f6;
+                color: white;
+                border: none;
+                border-radius: 8px;
+                cursor: pointer;
+                font-size: 14px;
+                font-weight: 500;
+              ">
+                Geri Dön
+              </button>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    /**
+     * Redirect to another protected site with token
+     * @param {string} url - Target URL
+     */
+    redirectTo(url) {
+      if (this._token) {
+        const separator = url.includes('?') ? '&' : '?';
+        window.location.href = `${url}${separator}token=${encodeURIComponent(this._token)}`;
+      } else {
+        window.location.href = url;
+      }
+    }
+
+    /**
+     * Check if user has access to specific resource
+     * @param {string} resourceId
+     * @returns {Promise<boolean>}
+     */
+    async hasPermission(resourceId) {
+      const result = await this.getUser(true, resourceId);
+      return result?.hasResourceAccess === true;
     }
   }
 

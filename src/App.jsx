@@ -5,6 +5,7 @@ import Register from './pages/Register'
 import VerifyOTP from './pages/VerifyOTP'
 import Success from './pages/Success'
 import Dashboard from './pages/Dashboard'
+import Admin from './pages/Admin'
 
 function App() {
   const [authState, setAuthState] = useState({
@@ -69,6 +70,10 @@ function App() {
         <Route 
           path="/dashboard" 
           element={<Dashboard />} 
+        />
+        <Route 
+          path="/admin" 
+          element={<Admin />} 
         />
       </Routes>
     </BrowserRouter>

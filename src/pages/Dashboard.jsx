@@ -206,10 +206,27 @@ function Dashboard() {
           </div>
         </motion.div>
 
+        {user.isAdmin && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            style={{ marginTop: '24px' }}
+          >
+            <button
+              onClick={() => navigate('/admin')}
+              className="btn"
+              style={{ width: '100%' }}
+            >
+              🛡️ Yetki Yönetimi Paneli
+            </button>
+          </motion.div>
+        )}
+
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
+          transition={{ delay: 0.5 }}
           className="message message-info"
           style={{ marginTop: '24px', marginBottom: 0 }}
         >
