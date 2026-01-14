@@ -204,47 +204,61 @@ export class InmapperAuth {
     if (this.config.onAccessDenied) {
       this.config.onAccessDenied(user);
     } else {
+      document.documentElement.style.cssText = '';
+      document.body.style.cssText = 'margin: 0 !important; padding: 0 !important;';
       document.body.innerHTML = `
         <div style="
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          min-height: 100vh;
-          font-family: system-ui, -apple-system, sans-serif;
-          background: #f8fafc;
-          color: #334155;
-          padding: 24px;
-          text-align: center;
+          position: fixed !important;
+          top: 0 !important;
+          left: 0 !important;
+          right: 0 !important;
+          bottom: 0 !important;
+          display: flex !important;
+          flex-direction: column !important;
+          align-items: center !important;
+          justify-content: center !important;
+          min-height: 100vh !important;
+          width: 100vw !important;
+          font-family: system-ui, -apple-system, sans-serif !important;
+          background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #f0f4ff 100%) !important;
+          color: #334155 !important;
+          padding: 24px !important;
+          text-align: center !important;
+          box-sizing: border-box !important;
+          z-index: 999999 !important;
+          margin: 0 !important;
         ">
           <div style="
-            background: white;
-            padding: 48px;
-            border-radius: 16px;
-            box-shadow: 0 4px 24px rgba(0,0,0,0.1);
-            max-width: 400px;
+            background: white !important;
+            padding: 48px !important;
+            border-radius: 16px !important;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.1) !important;
+            max-width: 400px !important;
+            width: 90% !important;
+            text-align: center !important;
           ">
-            <div style="font-size: 64px; margin-bottom: 16px;">🚫</div>
-            <h1 style="font-size: 24px; font-weight: 700; margin-bottom: 8px; color: #ef4444;">
+            <div style="font-size: 64px !important; margin-bottom: 16px !important; line-height: 1 !important;">🚫</div>
+            <h1 style="font-size: 24px !important; font-weight: 700 !important; margin: 0 0 8px 0 !important; color: #ef4444 !important;">
               Erişim Engellendi
             </h1>
-            <p style="color: #64748b; margin-bottom: 24px;">
+            <p style="color: #64748b !important; margin: 0 0 24px 0 !important; font-size: 14px !important; line-height: 1.5 !important;">
               Bu sayfaya erişim yetkiniz bulunmamaktadır.
               Lütfen yöneticinizle iletişime geçin.
             </p>
-            <p style="font-size: 14px; color: #94a3b8;">
+            <p style="font-size: 14px !important; color: #94a3b8 !important; margin: 0 !important;">
               Giriş yapan: ${user?.name || user?.email || 'Bilinmiyor'}
             </p>
             <button onclick="window.history.back()" style="
-              margin-top: 24px;
-              padding: 12px 24px;
-              background: #3b82f6;
-              color: white;
-              border: none;
-              border-radius: 8px;
-              cursor: pointer;
-              font-size: 14px;
-              font-weight: 500;
+              margin-top: 24px !important;
+              padding: 12px 24px !important;
+              background: #3b82f6 !important;
+              color: white !important;
+              border: none !important;
+              border-radius: 8px !important;
+              cursor: pointer !important;
+              font-size: 14px !important;
+              font-weight: 500 !important;
+              display: inline-block !important;
             ">
               Geri Dön
             </button>
